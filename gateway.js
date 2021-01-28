@@ -217,8 +217,6 @@ function setPlay(message) {
 
         if (msg.volume) {
             setVolume(msg.volume);
-        } else {
-            setVolume(msg);
         }
 
         let url;
@@ -268,6 +266,10 @@ function setSay(message) {
     try {
         let msg = JSON.parse(message);
 
+        if (msg.volume) {
+            setVolume(msg.volume);
+        }
+
         let lang = 'ru';
         if (msg.lang) {
             lang = msg.lang;
@@ -284,16 +286,8 @@ function setSay(message) {
             cp.execSync('mpc pause');
         }
 
-        let vol = getVolume();
-        if (msg.volume) {
-            setVolume(msg.volume);
-        }
-
         sayText(text, lang);
 
-        if (msg.volume) {
-            setVolume(vol);
-        }
         if (audio.play.value.url !== 'STOP') {
             cp.execSync('mpc play');
         }
