@@ -235,7 +235,7 @@ function setPlay(message) {
             if(audio.play.value.url.substr(0,4) == 'http') {
                 cp.execSync('mpc stop');
             } else {
-                player.mpg.close();
+                player.mpg.stop();
             }
             audio.play.value.url = 'STOP';         
         } else {
