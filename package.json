@@ -11,6 +11,7 @@
     "end-of-stream": "^1.4.4",
     "google-tts-api": "0.0.6",
     "inherits": "^2.0.4",
+    "mpg123": "^0.2.3",
     "mqtt": "^4.2.6",
     "mqtt-packet": "^6.7.0",
     "ms": "^2.1.3",

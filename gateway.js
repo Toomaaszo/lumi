@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const https = require('https');
 const urlParse = require('url').parse;
 const googleTTS = require('google-tts-api');
+const mpg = require('mpg123');
 
 module.exports = {
     getState,
@@ -124,6 +125,10 @@ let audio = {
     }
 }
 
+let player = {
+    mpg: new mpg.MpgPlayer()
+}
+
 ///////////////
 
 // Отправляем данные о статусе шлюза
@@ -227,15 +232,19 @@ function setPlay(message) {
         }
 
         if (url.length < 5) {
-            audio.play.value.url = 'STOP';
-            cp.execSync('mpc stop');
-        } else {
-            audio.play.value.url = url;
-            if (url.substring(0,4) == 'http') {
-                cp.execSync('mpc clear && mpc add ' + audio.play.value.url + ' && mpc play');
+            if(audio.play.value.url.substr(0,4) == 'http') {
+                cp.execSync('mpc stop');
             } else {
-                cp.execSync('mpg123 ' + url);
+                player.mpg.stop();
             }
+            audio.play.value.url = 'STOP';         
+        } else {
+            if (url.substring(0,4) == 'http') {
+                cp.execSync('mpc clear && mpc add ' + url + ' && mpc play');
+            } else {
+                player.mpg.play(url);
+            }
+            audio.play.value.url = url;
         }
 
         setTimeout(() => {
@@ -304,7 +313,7 @@ function sayText(text, lang) {
         const file = '/tmp/' + md5sum.digest('hex');
 
         if (fs.existsSync(file)) {
-            cp.execSync('mpg123 ' + file);
+            player.mpg.play(file);
         } else {
             googleTTS(text, lang)
                 .then((url) => {
@@ -312,7 +321,7 @@ function sayText(text, lang) {
                 })
                 .then(() => {
                     //console.log('Download success');
-                    cp.execSync('mpg123 ' + file);
+                    player.mpg.play(file);
                     //fs.unlinkSync(file);
                 })
                 .catch((err) => {
