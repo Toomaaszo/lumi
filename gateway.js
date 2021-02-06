@@ -46,8 +46,8 @@ let lamp = {
             g: 30,
             b: 30
         },
-        state: 'OFF',
-        brightness: 0
+        brightness: 0,
+        state: 'OFF'
     },
 
     real_color: {
@@ -57,17 +57,18 @@ let lamp = {
     },
 
     path: {
-        r: '/sys/class/backlight/lumi_r/brightness',
-        g: '/sys/class/backlight/lumi_g/brightness',
-        b: '/sys/class/backlight/lumi_b/brightness'
+        r: '/sys/class/leds/red/brightness',
+        g: '/sys/class/leds/green/brightness',
+        b: '/sys/class/leds/blue/brightness'
     },
 
     config_topic: 'homeassistant/light/lumi' + common.mac + '_light/config',
     homeassistant: {
         name: 'Lumi Light',
-        uniq_id: 'lumi_light',
+        uniq_id: 'lumi' + common.mac + '_light',
         schema: 'json',
         rgb: true,
+        brightness: true,
         stat_t: common.config.mqtt_topic + '/light',
         cmd_t: common.config.mqtt_topic + '/light/set',
         device: device
@@ -81,7 +82,7 @@ let illuminance = {
     config_topic: 'homeassistant/sensor/lumi' + common.mac + '_illuminance/config',
     homeassistant: {
         name: 'Lumi Illuminance',
-        uniq_id: 'lumi_illuminance',
+        uniq_id: 'lumi' + common.mac + '_illuminance',
         dev_cla: 'illuminance',
         unit_of_meas: 'lx',
         stat_t: common.config.mqtt_topic + '/illuminance',
@@ -161,7 +162,8 @@ function getLamp() {
     lamp.real_color.g = parseInt(fs.readFileSync(lamp.path.g).toString());
     lamp.real_color.b = parseInt(fs.readFileSync(lamp.path.b).toString());
 
-    lamp.brightness = Math.round(0.2126 * lamp.real_color.r + 0.7152 * lamp.real_color.g + 0.0722 * lamp.real_color.b);
+    lamp.value.brightness = Math.round(0.2126 * lamp.real_color.r + 0.7152 * lamp.real_color.g + 0.0722 * lamp.real_color.b);
+    common.myLog(lamp.value, common.colors.cyan);
 
     if (lamp.real_color.r + lamp.real_color.g + lamp.real_color.b > 0) {
         lamp.value.state = 'ON';
@@ -195,13 +197,20 @@ function setLamp(message) {
                 lamp.value.color.g = msg.color.g;
                 lamp.value.color.b = msg.color.b;
             }
-            fs.writeFileSync(lamp.path.r, Math.round(lamp.value.color.r * 100 / 255));
-            fs.writeFileSync(lamp.path.g, Math.round(lamp.value.color.g * 100 / 255));
-            fs.writeFileSync(lamp.path.b, Math.round(lamp.value.color.b * 100 / 255));
+            if (msg.brightness) {
+                lamp.value.brightness = Math.round(0.2126 * lamp.value.color.r + 0.7152 * lamp.value.color.g + 0.0722 * lamp.value.color.b);
+
+                let k = (msg.brightness / lamp.value.brightness);
+                lamp.value.color.r = Math.round(k * lamp.value.color.r);
+                lamp.value.color.g = Math.round(k * lamp.value.color.g);
+                lamp.value.color.b = Math.round(k * lamp.value.color.b);
+            }
+            fs.writeFileSync(lamp.path.r, lamp.value.color.r);
+            fs.writeFileSync(lamp.path.g, lamp.value.color.g);
+            fs.writeFileSync(lamp.path.b, lamp.value.color.b);
         }
     } catch (e) {
         common.myLog(e, common.colors.red);
-        //sayText('Произошла ошибка!', 'ru');
     }
     getLamp();
 }
