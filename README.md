@@ -37,7 +37,8 @@ wget https://openlumi.github.io/openwrt-packages/public.key -O /tmp/public.key
 opkg-key add /tmp/public.key
 echo 'src/gz openlumi https://openlumi.github.io/openwrt-packages/packages/19.07/arm_cortex-a9_neon' >> /etc/opkg/customfeeds.conf
 
-opkg update && opkg install node git-http mpc mpd-full
+opkg update && opkg install node git-http mpc mpd-full node-npm gcc python make
+ar -rc /usr/lib/libpthread.a
 ```
 
 Скачиваем:
@@ -48,6 +49,7 @@ cd /opt
 git clone https://github.com/Beetle-II/lumi.git
 cd lumi
 cp config_example.json config.json
+npm install
 ```
 
 Изменяем конфигурационный файл config.json Указываем адрес своего сервера, логин и пароль
